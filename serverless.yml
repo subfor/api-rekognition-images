@@ -14,6 +14,8 @@ provider:
   region: eu-west-1
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    IMAGES_BUCKET: 'images-recognition234234zcz3'
+    REGION_NAME: 'eu-west-1'
   iam:
     role:
       statements:
@@ -21,8 +23,8 @@ provider:
           Action:
             - s3:*
           Resource:
-            - "arn:aws:s3:::images-recognition234234zcz3"
-            - "arn:aws:s3:::images-recognition234234zcz3/*"
+            - "arn:aws:s3:::${self:provider.environment.IMAGES_BUCKET}"
+            - "arn:aws:s3:::${self:provider.environment.IMAGES_BUCKET}/*"
         - Effect: Allow
           Action:
             - dynamodb:Query
@@ -44,10 +46,7 @@ provider:
         post-callback_url:
           name: PostCallbackURL
           schema: ${file(blob_create_request.json)}
-          description: "A Model validation for adding posts"
-
-
-
+          description: "Validation for posts params"
 
 functions:
   createblob:
@@ -63,7 +62,7 @@ functions:
     handler: processBlob.rekognizeImage
     events:
       - s3:
-          bucket: images-recognition234234zcz3
+          bucket: ${self:provider.environment.IMAGES_BUCKET}
           event: s3:ObjectCreated:*
           existing: true
   callbackRezult:
@@ -75,13 +74,13 @@ functions:
           startingPosition: LATEST
           arn:
             Fn::GetAtt:
-              - TodosDynamoDbTable
+              - BlobsTable
               - StreamArn
 
 
 resources:
   Resources:
-    TodosDynamoDbTable:
+    BlobsTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Retain
       Properties:
@@ -102,4 +101,4 @@ resources:
     Bucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: images-recognition234234zcz3
+        BucketName: ${self:provider.environment.IMAGES_BUCKET}
