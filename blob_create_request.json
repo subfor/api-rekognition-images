@@ -1,0 +1,15 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "The Root Schema",
+  "required": ["callback_url"],
+  "properties": {
+    "callback_url": {
+      "type": "string",
+      "title": "The Foo Schema",
+      "default": "",
+      "pattern": "^((https?):\\/\\/)?(www.)?[a-z0-9]+\\.[a-z]+(\\/[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12})*$"
+    }
+  }
+}

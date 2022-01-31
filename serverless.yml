@@ -1,0 +1,105 @@
+service: api-rekognition-images
+frameworkVersion: '2 || 3'
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: eu-west-1
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource:
+            - "arn:aws:s3:::images-recognition234234zcz3"
+            - "arn:aws:s3:::images-recognition234234zcz3/*"
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:ListStreams
+          Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+        - Effect: Allow
+          Action:
+            - "rekognition:*"
+          Resource: "*"
+
+  apiGateway:
+    request:
+      schemas:
+        post-callback_url:
+          name: PostCallbackURL
+          schema: ${file(blob_create_request.json)}
+          description: "A Model validation for adding posts"
+
+
+
+
+functions:
+  createblob:
+    handler: blobs.createBlob
+    events:
+      - http:
+          method: post
+          path: blobs
+          request:
+            schemas:
+              application/json: post-callback_url
+  processblob:
+    handler: processBlob.rekognizeImage
+    events:
+      - s3:
+          bucket: images-recognition234234zcz3
+          event: s3:ObjectCreated:*
+          existing: true
+  handleInsertedDynamoDBItem:
+    handler: blobs.test
+    events:
+      - stream:
+          type: dynamodb
+          batchSize: 1
+          startingPosition: LATEST
+          arn:
+            Fn::GetAtt:
+              - TodosDynamoDbTable
+              - StreamArn
+
+
+resources:
+  Resources:
+    TodosDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: blob_id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: blob_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+    Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: images-recognition234234zcz3
