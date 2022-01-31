@@ -66,8 +66,8 @@ functions:
           bucket: images-recognition234234zcz3
           event: s3:ObjectCreated:*
           existing: true
-  handleInsertedDynamoDBItem:
-    handler: blobs.test
+  callbackRezult:
+    handler: blobs.make_callback
     events:
       - stream:
           type: dynamodb

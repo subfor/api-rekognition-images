@@ -6,7 +6,7 @@ import requests
 
 import boto3
 from botocore.exceptions import ClientError
-
+from serialize_json import from_dynamodb_to_json
 dynamodb = boto3.resource('dynamodb')
 
 
@@ -41,14 +41,20 @@ def createBlob(event, context):
     return response
 
 
-def test(event, context):
+def make_callback(event, context):
     action_db = event['Records'][0]['eventName']
-    data = event['Records'][0]['dynamodb']['NewImage']
-    callback_url = data['callback_url']['S']
-    labels = data['labels']['S']
-    # label = data['NewImage']['labels']
-    # labels = event['Records'][0]['dynamodb']['NewImage']['labels']['S']
-    # callback_url = json.loads(event['Records'][0]['eventName']['callback_url'])
-    # print(callback_url)
     if action_db == "MODIFY":
-        requests.post("https://webhook.site/6f3cab59-7972-4fde-9f78-26a86c6f1b82", json={"data": labels})
+        data = from_dynamodb_to_json(event['Records'][0]['dynamodb']['NewImage'])
+        # d = from_dynamodb_to_json(data)
+        callback_url = data['callback_url']
+        labels = data['labels']
+        requests.post(callback_url, json={"data": labels})
+
+# def make_callback(event, context):
+#     action_db = event['Records'][0]['eventName']
+#     if action_db == "MODIFY":
+#         data = event['Records'][0]['dynamodb']['NewImage']
+#         d = data['labels']['L']
+#         callback_url = data['callback_url']['S']
+#         # labels = data['labels']['S']
+#         requests.post(callback_url, json={"data": d})

@@ -1,8 +1,6 @@
 import json
-# import requests
 import boto3
 import os
-import uuid
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -15,7 +13,7 @@ def rekognizeImage(event, context):
     response = rekognitionClient.detect_labels(Image={'S3Object': {'Bucket': bucket_name, 'Name': file_name}},
                                                MaxLabels=5)
     labels = [{"label": item['Name'],
-               "confidence": item['Confidence'],
+               "confidence": str(item['Confidence']),
                "parents": [parent['Name'] for parent in item['Parents']]
                } for item in response['Labels']]
 
@@ -25,18 +23,7 @@ def rekognizeImage(event, context):
         },
         UpdateExpression="set labels = :list",
         ExpressionAttributeValues={
-            ':list': f"{labels}"
+            ':list': labels
         },
         ReturnValues="UPDATED_NEW"
     )
-    return None
-    # table.update_item(
-    #     Key={
-    #         'blob_id': file_name,
-    #     },
-    #     UpdateExpression="set labels = :g",
-    #     ExpressionAttributeValues={
-    #         ':g': labels
-    #     },
-    #     ReturnValues="UPDATED_NEW"
-    # )
