@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -13,7 +14,7 @@ def rekognizeImage(event, context):
     response = rekognitionClient.detect_labels(Image={'S3Object': {'Bucket': bucket_name, 'Name': file_name}},
                                                MaxLabels=5)
     labels = [{"label": item['Name'],
-               "confidence": str(item['Confidence']),
+               "confidence": Decimal(item['Confidence']),
                "parents": [parent['Name'] for parent in item['Parents']]
                } for item in response['Labels']]
 

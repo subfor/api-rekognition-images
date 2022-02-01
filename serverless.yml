@@ -50,7 +50,7 @@ provider:
 
 functions:
   createblob:
-    handler: blobs.createBlob
+    handler: src/blobs.createBlob
     events:
       - http:
           method: post
@@ -58,15 +58,23 @@ functions:
           request:
             schemas:
               application/json: post-callback_url
+      - http:
+          path: blobs/{id}
+          method: get
+          request:
+            parameters:
+              paths:
+                id: true
+
   processblob:
-    handler: processBlob.rekognizeImage
+    handler: src/processBlob.rekognizeImage
     events:
       - s3:
           bucket: ${self:provider.environment.IMAGES_BUCKET}
           event: s3:ObjectCreated:*
           existing: true
   callbackRezult:
-    handler: blobs.make_callback
+    handler: src/blobs.make_callback
     events:
       - stream:
           type: dynamodb
@@ -76,7 +84,6 @@ functions:
             Fn::GetAtt:
               - BlobsTable
               - StreamArn
-
 
 resources:
   Resources:
