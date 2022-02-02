@@ -17,7 +17,9 @@ def create_presigned_url_upload(key: str):
     s3_client = boto3.client('s3')
     try:
         response = s3_client.generate_presigned_url('put_object', Params={'Bucket': os.environ['IMAGES_BUCKET'],
-                                                                          'Key': key}, ExpiresIn=120)
+                                                                          'Key': key})
+        # response = s3_client.generate_presigned_url('put_object', Params={'Bucket': os.environ['IMAGES_BUCKET'],
+        #                                                                   'Key': key}, ExpiresIn=120)
     except ClientError as e:
         logging.error(e)
         return None
@@ -50,7 +52,7 @@ def createBlob(event, context):
             result = json.dumps(get_item['Item']['labels'],
                                 cls=decimalencoder.DecimalEncoder)
         except KeyError:
-            return {"statusCode": 404, "body": "Not found"}
+            return {"statusCode": 404, "body": json.dumps("Not found")}
 
         response = {"statusCode": 200, "body": result}
 
